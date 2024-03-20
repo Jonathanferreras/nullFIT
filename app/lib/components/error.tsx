@@ -1,6 +1,6 @@
 "use client";
 import { Alert, IconButton } from "@mui/material";
-import { useError } from "../providers/error";
+import { useError } from "../providers/ErrorProvider";
 
 export const ErrorAlert = () => {
   const { error, handleError } = useError();

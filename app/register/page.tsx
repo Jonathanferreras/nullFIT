@@ -2,14 +2,21 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, FormGroup, TextField } from "@mui/material";
-import { registerUser } from "../lib/services/auth/client";
-import { useError } from "../providers/error";
+import authService from "../lib/services/auth/";
+import { useError } from "../lib/providers/ErrorProvider";
 import {
   validateAccessKey,
   validateConfirmPassword,
   validateEmail,
   validatePassword,
 } from "../lib/utils/validation";
+import { DASHBOARD_ROUTE } from "../lib/constants/routes";
+import {
+  INVALID_ACCESS_KEY,
+  INVALID_EMAIL,
+  INVALID_PASSWORD,
+  PASSWORDS_MISMATCH,
+} from "../lib/constants/errors";
 
 export default function Register() {
   const initialFormState = {
@@ -20,9 +27,9 @@ export default function Register() {
   };
   const [user, setUser] = useState(initialFormState);
   const [validationErrors, setValidationErrors] = useState(initialFormState);
+  const [isFormValid, setIsFormValid] = useState(false);
   const router = useRouter();
   const { handleError } = useError();
-  const [isFormValid, setIsFormValid] = useState(false);
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,12 +44,16 @@ export default function Register() {
 
   const handleOnSubmit = async (e: React.SyntheticEvent) => {
     const { email, password, accessKey } = user;
-    const response = await registerUser({ email, password, accessKey });
+    const response = await authService.registerUser({
+      email,
+      password,
+      accessKey,
+    });
 
     if (response.error) {
       handleError(response.error);
     } else {
-      router.push("/dashboard");
+      router.push(DASHBOARD_ROUTE);
     }
   };
 
@@ -50,22 +61,18 @@ export default function Register() {
     let errorMessage = "";
     switch (name) {
       case "email":
-        errorMessage = validateEmail(value) ? "" : "Invalid email address";
+        errorMessage = validateEmail(value) ? "" : INVALID_EMAIL;
         break;
       case "password":
-        errorMessage = validatePassword(value)
-          ? ""
-          : "Password must contain at least one number, one capital letter, and one special character";
+        errorMessage = validatePassword(value) ? "" : INVALID_PASSWORD;
         break;
       case "confirmPassword":
         errorMessage = validateConfirmPassword(value, user.password)
           ? ""
-          : "Passwords do not match";
+          : PASSWORDS_MISMATCH;
         break;
       case "accessKey":
-        errorMessage = validateAccessKey(value)
-          ? ""
-          : "Invalid access key format (xxxx-xxxx-xxxx)";
+        errorMessage = validateAccessKey(value) ? "" : INVALID_ACCESS_KEY;
         break;
       default:
         break;
@@ -157,6 +164,7 @@ export default function Register() {
           Register
         </Button>
       </FormGroup>
+      <a href="/">Back</a>
     </>
   );
 }

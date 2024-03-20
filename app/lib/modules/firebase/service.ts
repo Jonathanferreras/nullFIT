@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   getAuth,
   signInWithEmailAndPassword,
+  signOut,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -15,9 +16,14 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { FirebaseAuthParams, FirebaseAuthResponse } from "./types";
+import { getErrorMessage } from "../../utils/errors";
 
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
+
+const getUserAuth = () => {
+  return auth;
+};
 
 const register = async (
   credentials: FirebaseAuthParams
@@ -29,11 +35,7 @@ const register = async (
   try {
     response = await createUserWithEmailAndPassword(auth, email, password);
   } catch (e) {
-    if (e instanceof Error) {
-      error = e.message;
-    } else {
-      error = String(e);
-    }
+    error = getErrorMessage(e);
   }
 
   return {
@@ -52,15 +54,29 @@ const login = async (
   try {
     response = await signInWithEmailAndPassword(auth, email, password);
   } catch (e) {
-    if (e instanceof Error) {
-      error = e.message;
-    } else {
-      error = String(e);
-    }
+    error = getErrorMessage(e);
   }
 
   return {
     userData: response,
+    error,
+  };
+};
+
+const signout = async () => {
+  let isSignedOut;
+  let error;
+
+  try {
+    await signOut(auth);
+    isSignedOut = true;
+  } catch (e) {
+    error = getErrorMessage(e);
+    isSignedOut = false;
+  }
+
+  return {
+    isSignedOut,
     error,
   };
 };
@@ -89,11 +105,7 @@ const validateAccessKey = async (accessKey: string) => {
       error = "Invalid access key!";
     }
   } catch (e) {
-    if (e instanceof Error) {
-      error = e.message;
-    } else {
-      error = String(e);
-    }
+    error = getErrorMessage(e);
   }
 
   return {
@@ -136,11 +148,7 @@ const assignAccessKeyToUser = async ({
       break;
     }
   } catch (e) {
-    if (e instanceof Error) {
-      error = e.message;
-    } else {
-      error = String(e);
-    }
+    error = getErrorMessage(e);
   }
 
   return {
@@ -181,11 +189,7 @@ const unassignAccessKeyToUser = async ({
       break;
     }
   } catch (e) {
-    if (e instanceof Error) {
-      error = e.message;
-    } else {
-      error = String(e);
-    }
+    error = getErrorMessage(e);
   }
 
   return {
@@ -195,8 +199,10 @@ const unassignAccessKeyToUser = async ({
 };
 
 const firebaseService = {
+  getUserAuth,
   register,
   login,
+  signout,
   validateAccessKey,
   assignAccessKeyToUser,
   unassignAccessKeyToUser,
