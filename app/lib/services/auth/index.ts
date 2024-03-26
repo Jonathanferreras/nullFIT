@@ -1,4 +1,4 @@
-import firebaseService from "../../modules/firebase/service";
+import firebaseService from "../../modules/firebase";
 import { getErrorMessage } from "../../utils/errors";
 import { UserRegistrationData, UserLoginCredentials } from "./types";
 
