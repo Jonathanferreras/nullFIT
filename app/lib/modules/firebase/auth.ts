@@ -200,7 +200,7 @@ const unassignAccessKeyToUser = async ({
   };
 };
 
-const firebaseService = {
+const firebaseAuthService = {
   getUserAuth,
   register,
   login,
@@ -210,4 +210,4 @@ const firebaseService = {
   unassignAccessKeyToUser,
 };
 
-export default firebaseService;
+export default firebaseAuthService;

@@ -1,4 +1,4 @@
-import firebaseService from "../../modules/firebase";
+import authServiceImpl from "../../modules/firebase/auth";
 import { getErrorMessage } from "../../utils/errors";
 import { UserRegistrationData, UserLoginCredentials } from "./types";
 
@@ -9,7 +9,7 @@ const registerUser = async (user: UserRegistrationData) => {
   let error;
 
   try {
-    validatedAccessKey = await firebaseService.validateAccessKey(
+    validatedAccessKey = await authServiceImpl.validateAccessKey(
       user.accessKey
     );
 
@@ -17,7 +17,7 @@ const registerUser = async (user: UserRegistrationData) => {
       throw new Error(validatedAccessKey.error || "Invalid access key");
     }
 
-    assignedAccessKey = await firebaseService.assignAccessKeyToUser({
+    assignedAccessKey = await authServiceImpl.assignAccessKeyToUser({
       email: user.email,
       accessKey: user.accessKey,
     });
@@ -28,10 +28,10 @@ const registerUser = async (user: UserRegistrationData) => {
       );
     }
 
-    registeredUser = await firebaseService.register(user);
+    registeredUser = await authServiceImpl.register(user);
 
     if (registeredUser.error) {
-      await firebaseService.unassignAccessKeyToUser({
+      await authServiceImpl.unassignAccessKeyToUser({
         accessKey: user.accessKey,
       });
       throw new Error(registeredUser.error);
@@ -51,7 +51,7 @@ const loginUser = async (user: UserLoginCredentials) => {
   let error;
 
   try {
-    loggedInUser = await firebaseService.login(user);
+    loggedInUser = await authServiceImpl.login(user);
 
     if (loggedInUser.error) {
       throw new Error(
@@ -73,7 +73,7 @@ const signoutUser = async () => {
   let error;
 
   try {
-    user = await firebaseService.signout();
+    user = await authServiceImpl.signout();
 
     if (user.error) {
       throw new Error(user.error || "Error in signing out, please try again!");
@@ -89,7 +89,7 @@ const signoutUser = async () => {
 };
 
 const onAuthChange = (handler: Function) => {
-  const auth = firebaseService.getUserAuth();
+  const auth = authServiceImpl.getUserAuth();
   const onAuthChangeListener = auth.onAuthStateChanged((user) => handler(user));
 
   return onAuthChangeListener;
