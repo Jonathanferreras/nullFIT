@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { useAuth } from "../providers/AuthProvider";
 import { useRouter } from "next/navigation";
-import authService from "../services/auth";
+import authService from "../services/auth/authService";
 import { DASHBOARD_ROUTE, ROOT_ROUTE } from "../constants/routes";
 
 export default function Navbar() {

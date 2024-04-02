@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, FormGroup, TextField } from "@mui/material";
-import authService from "../lib/services/auth/";
+import authService from "../lib/services/auth/authService";
 import { useError } from "../lib/providers/ErrorProvider";
 import { DASHBOARD_ROUTE } from "../lib/constants/routes";
 

@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
+import logger from "redux-logger";
 import workoutSlice from "./workoutSlice";
 
 export const store = configureStore({
   reducer: {
-    workoutSlice,
+    [workoutSlice.name]: workoutSlice.reducer,
   },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

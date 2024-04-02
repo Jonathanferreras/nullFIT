@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import authService from "../services/auth";
+import authService from "../services/auth/authService";
 import { Loader } from "../components/loader";
 import { ROOT_ROUTE, protectedRoutes } from "../constants/routes";
 

@@ -60,6 +60,43 @@ const getAllItems = async (collectionName: string) => {
   };
 };
 
+const getAllItemsByField = async <T extends CollectionDataItem>({
+  collectionName,
+  fieldName,
+  value,
+}: {
+  collectionName: string;
+  fieldName: string;
+  value: any;
+}) => {
+  let data;
+  let error;
+
+  try {
+    const q = query(
+      collection(db, collectionName),
+      where(fieldName, "==", value)
+    );
+    const querySnapshot = await getDocs(collection(db, collectionName));
+
+    if (querySnapshot.empty) {
+      throw new Error("Requested items does not exist!");
+    }
+
+    data = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as T),
+    }));
+  } catch (e) {
+    error = getErrorMessage(e);
+  }
+
+  return {
+    data,
+    error,
+  };
+};
+
 const getItemById = async <T extends CollectionDataItem>(
   collectionName: string,
   id: string
@@ -177,6 +214,7 @@ const deleteItem = async (collectionName: string, itemId: string) => {
 const firebaseRepository = {
   createItem,
   getAllItems,
+  getAllItemsByField,
   getItemById,
   getItemByField,
   updateItem,
