@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "./lib/providers/AuthProvider";
+import { StoreProvider } from "./lib/providers/StoreProvider";
 import { ErrorProvider } from "./lib/providers/ErrorProvider";
 import { ErrorAlert } from "./lib/components/error";
 import Navbar from "./lib/components/navbar";
@@ -21,11 +22,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className} suppressHydrationWarning={true}>
         <AuthProvider>
-          <ErrorProvider>
-            <ErrorAlert />
-            <Navbar />
-            {children}
-          </ErrorProvider>
+          <StoreProvider>
+            <ErrorProvider>
+              <ErrorAlert />
+              <Navbar />
+              {children}
+            </ErrorProvider>
+          </StoreProvider>
         </AuthProvider>
       </body>
     </html>
