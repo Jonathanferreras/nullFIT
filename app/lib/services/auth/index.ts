@@ -1,4 +1,6 @@
+import { ACCESS_KEYS_COLLECTION } from "../../constants/db";
 import authServiceImpl from "../../modules/firebase/auth";
+import repositoryImpl from "../../modules/firebase/repository";
 import { getErrorMessage } from "../../utils/errors";
 import { UserRegistrationData, UserLoginCredentials } from "./types";
 
@@ -9,20 +11,15 @@ const registerUser = async (user: UserRegistrationData) => {
   let error;
 
   try {
-    validatedAccessKey = await authServiceImpl.validateAccessKey(
-      user.accessKey
-    );
+    validatedAccessKey = await isValidateAccessKey(user.accessKey);
 
-    if (validatedAccessKey.error || !validatedAccessKey.isValidAccessKey) {
+    if (validatedAccessKey.error || !validatedAccessKey.isValid) {
       throw new Error(validatedAccessKey.error || "Invalid access key");
     }
 
-    assignedAccessKey = await authServiceImpl.assignAccessKeyToUser({
-      email: user.email,
-      accessKey: user.accessKey,
-    });
+    assignedAccessKey = await assignAccessKeyToUser(user.email, user.accessKey);
 
-    if (assignedAccessKey.error || !assignedAccessKey.isAssignedAccessKey) {
+    if (assignedAccessKey.error || !assignedAccessKey.isAssigned) {
       throw new Error(
         assignedAccessKey.error || "Failed to assign access key to user"
       );
@@ -31,9 +28,7 @@ const registerUser = async (user: UserRegistrationData) => {
     registeredUser = await authServiceImpl.register(user);
 
     if (registeredUser.error) {
-      await authServiceImpl.unassignAccessKeyToUser({
-        accessKey: user.accessKey,
-      });
+      await unassignAccessKeyToUser(user.accessKey);
       throw new Error(registeredUser.error);
     }
   } catch (e) {
@@ -93,6 +88,123 @@ const onAuthChange = (handler: Function) => {
   const onAuthChangeListener = auth.onAuthStateChanged((user) => handler(user));
 
   return onAuthChangeListener;
+};
+
+const isValidateAccessKey = async (accessKey: string) => {
+  const accessKeyField = "key";
+  let isValid = false;
+  let error;
+
+  try {
+    const response = await repositoryImpl.getItemByField({
+      collectionName: ACCESS_KEYS_COLLECTION,
+      fieldName: accessKeyField,
+      value: accessKey,
+    });
+
+    if (!response.data || response.error) {
+      throw new Error(response.error || "Invalid access key!");
+    }
+
+    if (!response.data.email) {
+      isValid = true;
+    } else {
+      throw new Error("Access key already assigned");
+    }
+  } catch (e) {
+    error = getErrorMessage(e);
+  }
+
+  return {
+    isValid,
+    error,
+  };
+};
+
+const assignAccessKeyToUser = async (email: string, accessKey: string) => {
+  const accessKeyField = "key";
+  let isAssigned = false;
+  let error = null;
+
+  try {
+    const response = await repositoryImpl.getItemByField({
+      collectionName: ACCESS_KEYS_COLLECTION,
+      fieldName: accessKeyField,
+      value: accessKey,
+    });
+
+    if (!response.data || response.error) {
+      throw new Error(response.error || "Invalid access key!");
+    }
+
+    if (!response.data.email) {
+      const updatedData = await repositoryImpl.updateItem({
+        collectionName: ACCESS_KEYS_COLLECTION,
+        itemId: response.data.id,
+        value: { email },
+      });
+
+      if (!updatedData.data || updatedData.error) {
+        throw new Error(
+          updatedData.error || "Unable to confirm access key assignment"
+        );
+      }
+
+      isAssigned = true;
+    } else {
+      throw new Error("Access key already assigned");
+    }
+  } catch (e) {
+    error = getErrorMessage(e);
+  }
+
+  return {
+    isAssigned,
+    error,
+  };
+};
+
+const unassignAccessKeyToUser = async (accessKey: string) => {
+  const accessKeyField = "key";
+  let isUnassigned = false;
+  let error;
+
+  try {
+    const response = await repositoryImpl.getItemByField({
+      collectionName: ACCESS_KEYS_COLLECTION,
+      fieldName: accessKeyField,
+      value: accessKey,
+    });
+
+    if (!response.data || response.error) {
+      throw new Error(response.error || "Invalid access key!");
+    }
+
+    if (response.data.email) {
+      const updatedData = await repositoryImpl.updateItem({
+        collectionName: ACCESS_KEYS_COLLECTION,
+        itemId: response.data.id,
+        value: { email: "" },
+      });
+
+      if (updatedData.data?.email || updatedData.error) {
+        throw new Error(
+          updatedData.error || "Unable to confirm key has not been unassigned"
+        );
+      }
+
+      isUnassigned = updatedData.data?.email === "";
+    } else {
+      throw new Error("Unable to unassign access key!");
+    }
+  } catch (e) {
+    error = getErrorMessage(e);
+  }
+
+  return {
+    isUnassigned,
+    error,
+  };
 };
 
 const authService = { registerUser, loginUser, signoutUser, onAuthChange };
