@@ -77,7 +77,7 @@ const getAllItemsByField = async <T extends CollectionDataItem>({
       collection(db, collectionName),
       where(fieldName, "==", value)
     );
-    const querySnapshot = await getDocs(collection(db, collectionName));
+    const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
       throw new Error("Requested items does not exist!");

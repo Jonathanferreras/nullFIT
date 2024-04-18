@@ -4,14 +4,14 @@ import { Exercise } from "../../models/exercise";
 import { getErrorMessage } from "../../utils/errors";
 
 export interface WorkoutState {
-  exercises: any[];
+  defaultExercises: any[];
+  customExercises: any[];
 }
 
 const initialState: WorkoutState = {
-  exercises: [],
+  defaultExercises: [],
+  customExercises: [],
 };
-
-// todo: grab default exercises and display them
 
 export const fetchDefaultExercises = createAsyncThunk(
   "workout/fetchDefaultExercises",
@@ -23,7 +23,36 @@ export const fetchDefaultExercises = createAsyncThunk(
       const response = await workoutService.getAllDefaultExercises();
 
       if (response.error) {
-        throw new Error(response.error || "Error fetching all exercises");
+        throw new Error(
+          response.error || "Error fetching all default exercises"
+        );
+      }
+
+      data = response.exercises;
+    } catch (e) {
+      error = getErrorMessage(e);
+    }
+
+    return {
+      data,
+      error,
+    };
+  }
+);
+
+export const fetchCustomExercises = createAsyncThunk(
+  "workout/fetchCustomExercises",
+  async (userId: string) => {
+    let data;
+    let error;
+
+    try {
+      const response = await workoutService.getAllCustomExercises(userId);
+
+      if (response.error) {
+        throw new Error(
+          response.error || "Error fetching all custom exercises"
+        );
       }
 
       data = response.exercises;
@@ -43,11 +72,14 @@ export const workoutSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    // Add reducers for additional action types here, and handle loading state as needed
     builder.addCase(fetchDefaultExercises.fulfilled, (state, action) => {
-      // Add user to the state array
       if (!action.payload.error && action.payload.data) {
-        state.exercises = action.payload.data;
+        state.defaultExercises = action.payload.data;
+      }
+    });
+    builder.addCase(fetchCustomExercises.fulfilled, (state, action) => {
+      if (!action.payload.error && action.payload.data) {
+        state.customExercises = action.payload.data;
       }
     });
   },

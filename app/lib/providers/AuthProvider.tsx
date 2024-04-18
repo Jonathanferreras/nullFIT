@@ -1,11 +1,16 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import authService from "../services/auth/authService";
 import { Loader } from "../components/loader";
+import { User } from "../models/user";
+import authService from "../services/auth/authService";
 import { ROOT_ROUTE, protectedRoutes } from "../constants/routes";
 
-export const AuthContext = createContext({
+export interface AuthContext {
+  user: User | null;
+}
+
+export const AuthContext = createContext<AuthContext>({
   user: null,
 });
 

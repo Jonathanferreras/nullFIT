@@ -1,4 +1,8 @@
-import { UserCredential } from "firebase/auth";
+import { User, UserCredential } from "firebase/auth";
+
+export interface FirebaseAuthUser {
+  user: User | null;
+}
 
 export interface FirebaseAuthParams {
   email: string;

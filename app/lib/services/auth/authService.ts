@@ -64,21 +64,25 @@ const loginUser = async (user: UserLoginCredentials) => {
 };
 
 const signoutUser = async () => {
-  let user;
+  let isSignedOut;
   let error;
 
   try {
-    user = await authServiceImpl.signout();
+    const response = await authServiceImpl.signout();
 
-    if (user.error) {
-      throw new Error(user.error || "Error in signing out, please try again!");
+    if (response.error) {
+      throw new Error(
+        response.error || "Error in signing out, please try again!"
+      );
     }
+
+    isSignedOut = response.isSignedOut;
   } catch (e) {
     error = getErrorMessage(e);
   }
 
   return {
-    isSignedOut: user?.isSignedOut,
+    isSignedOut,
     error,
   };
 };
@@ -106,11 +110,11 @@ const isValidateAccessKey = async (accessKey: string) => {
       throw new Error(response.error || "Invalid access key!");
     }
 
-    if (!response.data.email) {
-      isValid = true;
-    } else {
+    if (response.data.email) {
       throw new Error("Access key already assigned");
     }
+
+    isValid = true;
   } catch (e) {
     error = getErrorMessage(e);
   }
@@ -137,23 +141,23 @@ const assignAccessKeyToUser = async (email: string, accessKey: string) => {
       throw new Error(response.error || "Invalid access key!");
     }
 
-    if (!response.data.email) {
-      const updatedData = await repositoryImpl.updateItem({
-        collectionName: ACCESS_KEYS_COLLECTION,
-        itemId: response.data.id,
-        value: { email },
-      });
-
-      if (!updatedData.data || updatedData.error) {
-        throw new Error(
-          updatedData.error || "Unable to confirm access key assignment"
-        );
-      }
-
-      isAssigned = true;
-    } else {
+    if (response.data.email) {
       throw new Error("Access key already assigned");
     }
+
+    const updatedData = await repositoryImpl.updateItem({
+      collectionName: ACCESS_KEYS_COLLECTION,
+      itemId: response.data.id,
+      value: { email },
+    });
+
+    if (!updatedData.data || updatedData.error) {
+      throw new Error(
+        updatedData.error || "Unable to confirm access key assignment"
+      );
+    }
+
+    isAssigned = true;
   } catch (e) {
     error = getErrorMessage(e);
   }
@@ -180,23 +184,23 @@ const unassignAccessKeyToUser = async (accessKey: string) => {
       throw new Error(response.error || "Invalid access key!");
     }
 
-    if (response.data.email) {
-      const updatedData = await repositoryImpl.updateItem({
-        collectionName: ACCESS_KEYS_COLLECTION,
-        itemId: response.data.id,
-        value: { email: "" },
-      });
-
-      if (updatedData.data?.email || updatedData.error) {
-        throw new Error(
-          updatedData.error || "Unable to confirm key has not been unassigned"
-        );
-      }
-
-      isUnassigned = updatedData.data?.email === "";
-    } else {
+    if (!response.data.email) {
       throw new Error("Unable to unassign access key!");
     }
+
+    const updatedData = await repositoryImpl.updateItem({
+      collectionName: ACCESS_KEYS_COLLECTION,
+      itemId: response.data.id,
+      value: { email: "" },
+    });
+
+    if (updatedData.data?.email || updatedData.error) {
+      throw new Error(
+        updatedData.error || "Unable to confirm key has not been unassigned"
+      );
+    }
+
+    isUnassigned = updatedData.data?.email === "";
   } catch (e) {
     error = getErrorMessage(e);
   }
